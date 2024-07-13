@@ -21,19 +21,17 @@ export class RaffleService {
     });
   }
 
-  findAllByStatus(status: RaffleStatus) {
-    return this.raffleRepository
-      .find({
-        where: { status },
-        order: { raffleDate: 'ASC' },
-        relations: ['createdBy']
-      })
-      .then((res) =>
-        res.map(({ createdBy: { id, firstName, lastName }, ...raffle }) => ({
-          ...raffle,
-          createdBy: { id, firstName, lastName }
-        }))
-      );
+  async findAllByStatus(status: RaffleStatus) {
+    const res = await this.raffleRepository.find({
+      where: { status },
+      order: { raffleDate: 'ASC' },
+      relations: ['createdBy']
+    });
+
+    return res.map(({ createdBy: { id, firstName, lastName }, ...raffle }) => ({
+      ...raffle,
+      createdBy: { id, firstName, lastName }
+    }));
   }
 
   findOne(id: string) {

@@ -4,6 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
@@ -30,8 +31,9 @@ export class Raffle {
   @Column({ type: 'enum', enum: RaffleStatus, default: RaffleStatus.PENDING })
   status: RaffleStatus;
 
-  @Column({ length: 36, nullable: true })
-  winner: string;
+  @OneToOne(() => User)
+  @JoinColumn()
+  winner: User;
 
   @ManyToOne(() => User)
   @JoinColumn()

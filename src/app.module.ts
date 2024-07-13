@@ -5,6 +5,7 @@ import { RaffleModule } from './modules/raffle/raffle.module';
 import mysqlConfig from './common/config/mysql.config';
 import { UserModule } from './modules/user/user.module';
 import { EncryptModule } from './common/modules/encrypt/encrypt.module';
+import { EntryModule } from './modules/entry/entry.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { EncryptModule } from './common/modules/encrypt/encrypt.module';
     }),
     RaffleModule,
     UserModule,
-    EncryptModule
+    EncryptModule,
+    EntryModule
   ],
   controllers: [],
   providers: []
