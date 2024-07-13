@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { CreateRaffleDto } from './dto/create-raffle.dto';
 import { UpdateRaffleDto } from './dto/update-raffle.dto';
@@ -14,14 +15,25 @@ export class RaffleService {
   ) {}
 
   create(createRaffleDto: CreateRaffleDto) {
-    return this.raffleRepository.save(createRaffleDto);
+    return this.raffleRepository.save({
+      ...createRaffleDto,
+      createdBy: { id: createRaffleDto.createdBy }
+    });
   }
 
   findAllByStatus(status: RaffleStatus) {
-    return this.raffleRepository.find({
-      where: { status },
-      order: { raffleDate: 'ASC' }
-    });
+    return this.raffleRepository
+      .find({
+        where: { status },
+        order: { raffleDate: 'ASC' },
+        relations: ['createdBy']
+      })
+      .then((res) =>
+        res.map(({ createdBy: { id, firstName, lastName }, ...raffle }) => ({
+          ...raffle,
+          createdBy: { id, firstName, lastName }
+        }))
+      );
   }
 
   findOne(id: string) {

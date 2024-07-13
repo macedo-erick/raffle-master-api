@@ -3,7 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RaffleModule } from './modules/raffle/raffle.module';
 import mysqlConfig from './common/config/mysql.config';
-import { Raffle } from './modules/raffle/entities/raffle.entity';
+import { UserModule } from './modules/user/user.module';
+import { EncryptModule } from './common/modules/encrypt/encrypt.module';
 
 @Module({
   imports: [
@@ -22,7 +23,9 @@ import { Raffle } from './modules/raffle/entities/raffle.entity';
         autoLoadEntities: true
       })
     }),
-    RaffleModule
+    RaffleModule,
+    UserModule,
+    EncryptModule
   ],
   controllers: [],
   providers: []

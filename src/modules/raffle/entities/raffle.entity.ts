@@ -2,10 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
 import { RaffleStatus } from '../../../common/constants/raffle-status.enum';
+import { User } from '../../user/entities/user.entity';
 
 @Entity({ name: 'raffle' })
 export class Raffle {
@@ -30,8 +33,9 @@ export class Raffle {
   @Column({ length: 36, nullable: true })
   winner: string;
 
-  @Column({ length: 36, nullable: true })
-  createdBy: string;
+  @ManyToOne(() => User)
+  @JoinColumn()
+  createdBy: User;
 
   @CreateDateColumn()
   createdDate: Date;
