@@ -15,23 +15,23 @@ export class EntryService {
   ) {}
 
   async create(createEntryDto: CreateEntryDto) {
-    const numbers = await Promise.all(
+    const randomNumbers = await Promise.all(
       Array.from({ length: createEntryDto.numbersCount }).map(
         async () => await this.generateRandomNumber(createEntryDto.raffleId)
       )
     );
 
-    const entries = numbers.map((number) => ({
+    const entries = randomNumbers.map((number) => ({
       raffle: { id: createEntryDto.raffleId },
       user: { id: createEntryDto.userId },
       number
     }));
 
-    const savedNumbers = await this.entryRepository
+    const numbers = await this.entryRepository
       .save(entries)
       .then((entries) => entries.map((entry) => entry.number));
 
-    return { numbers: savedNumbers };
+    return { numbers };
   }
 
   async findAll(userId: string, raffleId: string) {
