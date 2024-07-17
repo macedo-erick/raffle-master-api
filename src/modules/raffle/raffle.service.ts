@@ -1,17 +1,20 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateRaffleDto } from './dto/create-raffle.dto';
 import { UpdateRaffleDto } from './dto/update-raffle.dto';
 import { Repository } from 'typeorm';
 import { Raffle } from './entities/raffle.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RaffleStatus } from '../../common/constants/raffle-status.enum';
+import { EntryService } from '../entry/entry.service';
 
 @Injectable()
 export class RaffleService {
   constructor(
     @InjectRepository(Raffle)
-    private readonly raffleRepository: Repository<Raffle>
+    private readonly raffleRepository: Repository<Raffle>,
+    @Inject(forwardRef(() => EntryService))
+    private readonly entryService: EntryService
   ) {}
 
   create(createRaffleDto: CreateRaffleDto) {
@@ -44,5 +47,9 @@ export class RaffleService {
 
   remove(id: string) {
     return this.raffleRepository.delete({ id });
+  }
+
+  findAllByUser(userId: string) {
+    return this.entryService.findAllRafflesByUser(userId);
   }
 }

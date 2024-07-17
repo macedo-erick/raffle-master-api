@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { Repository } from 'typeorm';
 import { Entry } from './entities/entry.entity';
@@ -11,6 +11,7 @@ export class EntryService {
   constructor(
     @InjectRepository(Entry)
     private readonly entryRepository: Repository<Entry>,
+    @Inject(forwardRef(() => RaffleService))
     private readonly raffleService: RaffleService
   ) {}
 
@@ -34,7 +35,19 @@ export class EntryService {
     return { numbers };
   }
 
-  async findAll(userId: string, raffleId: string) {
+  async findAllRafflesByUser(userId: string) {
+    const raffles = await this.entryRepository
+      .createQueryBuilder('entry')
+      .select(['raffle.*'])
+      .where('entry.userId = :userId', { userId })
+      .distinct(true)
+      .innerJoin('entry.raffle', 'raffle')
+      .getRawMany();
+
+    return { raffles, count: raffles.length };
+  }
+
+  async findAllEntriesByUserRaffle(userId: string, raffleId: string) {
     const entries = await this.entryRepository.find({
       where: { user: { id: userId }, raffle: { id: raffleId } },
       select: ['number']
@@ -42,7 +55,7 @@ export class EntryService {
 
     const numbers = entries.map((entry) => entry.number);
 
-    return { numbers };
+    return { numbers, counts: numbers.length };
   }
 
   existsByNumber(number: number) {

@@ -12,6 +12,8 @@ import { RaffleService } from './raffle.service';
 import { CreateRaffleDto } from './dto/create-raffle.dto';
 import { UpdateRaffleDto } from './dto/update-raffle.dto';
 import { RaffleStatus } from '../../common/constants/raffle-status.enum';
+import { Public } from '../../common/decorators/public/public.decorator';
+import { User } from '../../common/decorators/user/user.decorator';
 
 @Controller('raffles')
 @ApiTags('Raffles Resources')
@@ -23,17 +25,25 @@ export class RaffleController {
     return this.raffleService.create(createRaffleDto);
   }
 
+  @Get()
+  findAll(@User() userId: string) {
+    return this.raffleService.findAllByUser(userId);
+  }
+
   @Get('/pending')
+  @Public()
   findAllPending() {
     return this.raffleService.findAllByStatus(RaffleStatus.PENDING);
   }
 
   @Get('/finished')
+  @Public()
   findAllFinished() {
     return this.raffleService.findAllByStatus(RaffleStatus.FINISHED);
   }
 
   @Get(':id')
+  @Public()
   findOne(@Param('id') id: string) {
     return this.raffleService.findOne(id);
   }

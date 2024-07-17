@@ -1,12 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { EntryService } from './entry.service';
 import { EntryController } from './entry.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Entry } from './entities/entry.entity';
 
+@Global()
 @Module({
   imports: [TypeOrmModule.forFeature([Entry])],
   controllers: [EntryController],
-  providers: [EntryService]
+  providers: [EntryService],
+  exports: [EntryService]
 })
 export class EntryModule {}

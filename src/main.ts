@@ -1,11 +1,15 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from './modules/auth/guards/auth/auth.guard';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const jwtService = app.get(JwtService);
+  const reflector = app.get(Reflector);
 
   const config = new DocumentBuilder()
     .setTitle('TODO API')
@@ -13,17 +17,17 @@ async function bootstrap() {
     .setVersion('0.0.1-SNAPSHOT')
     .setLicense('GNU', 'https://choosealicense.com/licenses/lgpl-3.0/')
     .setContact('Erick Macedo', null, 'macedo.eriick@gmail.com')
-    // .addBearerAuth(
-    //   {
-    //     type: 'http',
-    //     scheme: 'bearer',
-    //     bearerFormat: 'JWT',
-    //     name: 'Authorization',
-    //     in: 'header',
-    //   },
-    //   'APIKey',
-    // )
-    // .addSecurityRequirements('APIKey')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header'
+      },
+      'APIKey'
+    )
+    .addSecurityRequirements('APIKey')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -39,8 +43,10 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get('CORS_ORIGINS').split(','),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    credentials: true,
+    credentials: true
   });
+
+  app.useGlobalGuards(new AuthGuard(jwtService, reflector, configService));
 
   await app.listen(3000);
 }

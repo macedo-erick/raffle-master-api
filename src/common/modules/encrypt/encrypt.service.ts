@@ -10,7 +10,7 @@ export class EncryptService {
     return bcrypt.hashSync(str, Number(this.configService.get('SALT_ROUNDS')));
   }
 
-  compare(str: string, hash: string): string {
-    return bcrypt.hashSync(str, hash);
+  compare(str: string, hash: string): boolean {
+    return bcrypt.compareSync(str, hash);
   }
 }

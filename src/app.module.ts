@@ -6,10 +6,13 @@ import mysqlConfig from './common/config/mysql.config';
 import { UserModule } from './modules/user/user.module';
 import { EncryptModule } from './common/modules/encrypt/encrypt.module';
 import { EntryModule } from './modules/entry/entry.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { JwtModule } from '@nestjs/jwt';
+import jwtConfig from './common/config/jwt.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [mysqlConfig] }),
+    ConfigModule.forRoot({ isGlobal: true, load: [mysqlConfig, jwtConfig] }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -24,10 +27,22 @@ import { EntryModule } from './modules/entry/entry.module';
         autoLoadEntities: true
       })
     }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('jwt.secret'),
+        signOptions: {
+          expiresIn: parseInt(configService.get('jwt.expires'))
+        }
+      }),
+      inject: [ConfigService]
+    }),
     RaffleModule,
     UserModule,
     EncryptModule,
-    EntryModule
+    EntryModule,
+    AuthModule
   ],
   controllers: [],
   providers: []
