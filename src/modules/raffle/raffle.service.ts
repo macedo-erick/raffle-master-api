@@ -38,7 +38,28 @@ export class RaffleService {
   }
 
   findOne(id: string) {
-    return this.raffleRepository.findOne({ where: { id } });
+    return this.raffleRepository
+      .createQueryBuilder('raffle')
+      .select([
+        'user.id',
+        'user.firstName',
+        'lastName',
+        'user.email',
+        'user.phone',
+        'raffle.id',
+        'raffle.name',
+        'raffle.description',
+        'raffle.raffleDate',
+        'raffle.maxEntries',
+        'raffle.status',
+        'raffle.winnerId',
+        'raffle.createdDate',
+        'raffle.prizeValue',
+        'raffle.entryValue'
+      ])
+      .where('raffle.id = :id', { id })
+      .innerJoin('raffle.createdBy', 'user')
+      .getOne();
   }
 
   update(id: string, updateRaffleDto: UpdateRaffleDto) {
