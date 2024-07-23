@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { CreateEntryDto } from './dto/create-entry.dto';
+import { CreateEntriesDto } from './dto/create-entries.dto';
 import { Repository } from 'typeorm';
 import { Entry } from './entities/entry.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,16 +15,16 @@ export class EntryService {
     private readonly raffleService: RaffleService
   ) {}
 
-  async create(createEntryDto: CreateEntryDto) {
+  async create(createEntryDto: CreateEntriesDto, userId: string) {
     const randomNumbers = await Promise.all(
-      Array.from({ length: createEntryDto.numbersCount }).map(
+      Array.from({ length: createEntryDto.quantity }).map(
         async () => await this.generateRandomNumber(createEntryDto.raffleId)
       )
     );
 
     const entries = randomNumbers.map((number) => ({
       raffle: { id: createEntryDto.raffleId },
-      user: { id: createEntryDto.userId },
+      user: { id: userId },
       number
     }));
 
@@ -48,11 +48,15 @@ export class EntryService {
   }
 
   async findAllEntriesByUserRaffle(userId: string, raffleId: string) {
-    const entries = await this.entryRepository.find({
-      where: { user: { id: userId }, raffle: { id: raffleId } },
-      select: ['number'],
-      order: { number: 'ASC' }
-    });
+    const entries = await this.entryRepository
+      .createQueryBuilder('entry')
+      .select('entry.number')
+      .where('entry.raffleId = :raffleId and entry.userId = :userId', {
+        raffleId,
+        userId
+      })
+      .orderBy('entry.number', 'ASC')
+      .getMany();
 
     const numbers = entries.map((entry) => entry.number);
 
@@ -66,7 +70,7 @@ export class EntryService {
   async generateRandomNumber(raffleId: string): Promise<number> {
     const { maxEntries } = await this.raffleService.findOne(raffleId);
 
-    const number = Math.floor(Math.random() * maxEntries) + 1;
+    const number = Math.floor(Math.random() * maxEntries * 2) + 1;
 
     const existsByNumber = await this.existsByNumber(number);
 

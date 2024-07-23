@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { EntryService } from './entry.service';
-import { CreateEntryDto } from './dto/create-entry.dto';
+import { CreateEntriesDto } from './dto/create-entries.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { User } from '../../common/decorators/user/user.decorator';
 
@@ -10,8 +10,8 @@ export class EntryController {
   constructor(private readonly entryService: EntryService) {}
 
   @Post()
-  create(@Body() createEntryDto: CreateEntryDto) {
-    return this.entryService.create(createEntryDto);
+  create(@User() userId: string, @Body() createEntryDto: CreateEntriesDto) {
+    return this.entryService.create(createEntryDto, userId);
   }
 
   @Get(':raffleId')
