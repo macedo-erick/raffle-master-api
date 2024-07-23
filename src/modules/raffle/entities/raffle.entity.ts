@@ -22,10 +22,10 @@ export class Raffle {
   @Column({ length: 5000 })
   description: string;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   prizeValue: number;
 
-  @Column({ type: 'decimal', default: 0 })
+  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
   entryValue: number;
 
   @Column({ type: 'datetime' })
