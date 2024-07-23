@@ -50,12 +50,13 @@ export class EntryService {
   async findAllEntriesByUserRaffle(userId: string, raffleId: string) {
     const entries = await this.entryRepository.find({
       where: { user: { id: userId }, raffle: { id: raffleId } },
-      select: ['number']
+      select: ['number'],
+      order: { number: 'ASC' }
     });
 
     const numbers = entries.map((entry) => entry.number);
 
-    return { numbers, counts: numbers.length };
+    return { numbers, count: numbers.length };
   }
 
   existsByNumber(number: number) {

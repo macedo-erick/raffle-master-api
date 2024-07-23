@@ -4,7 +4,7 @@ import { CreateEntryDto } from './dto/create-entry.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { User } from '../../common/decorators/user/user.decorator';
 
-@Controller('entry')
+@Controller('entries')
 @ApiTags('Entry Resources')
 export class EntryController {
   constructor(private readonly entryService: EntryService) {}
