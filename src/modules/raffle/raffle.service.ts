@@ -6,15 +6,15 @@ import { Repository } from 'typeorm';
 import { Raffle } from './entities/raffle.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RaffleStatus } from '../../common/constants/raffle-status.enum';
-import { EntryService } from '../entry/entry.service';
+import { TicketService } from '../ticket/ticket.service';
 
 @Injectable()
 export class RaffleService {
   constructor(
     @InjectRepository(Raffle)
     private readonly raffleRepository: Repository<Raffle>,
-    @Inject(forwardRef(() => EntryService))
-    private readonly entryService: EntryService
+    @Inject(forwardRef(() => TicketService))
+    private readonly TicketService: TicketService
   ) {}
 
   create(createRaffleDto: CreateRaffleDto) {
@@ -50,15 +50,19 @@ export class RaffleService {
         'raffle.name',
         'raffle.description',
         'raffle.raffleDate',
-        'raffle.maxEntries',
+        'raffle.maxTickets',
         'raffle.status',
         'raffle.winnerId',
         'raffle.createdDate',
         'raffle.prizeValue',
-        'raffle.entryValue'
+        'raffle.ticketPrice',
+        'image.url',
+        'image.alternateText',
+        'image.createdDate'
       ])
       .where('raffle.id = :id', { id })
       .innerJoin('raffle.createdBy', 'user')
+      .innerJoin('raffle.images', 'image')
       .getOne();
   }
 
@@ -71,6 +75,6 @@ export class RaffleService {
   }
 
   findAllByUser(userId: string) {
-    return this.entryService.findAllRafflesByUser(userId);
+    return this.TicketService.findAllRafflesByUser(userId);
   }
 }

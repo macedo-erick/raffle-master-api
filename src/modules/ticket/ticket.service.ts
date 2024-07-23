@@ -2,29 +2,33 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { CreateEntriesDto } from './dto/create-entries.dto';
 import { Repository } from 'typeorm';
-import { Entry } from './entities/entry.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RaffleService } from '../raffle/raffle.service';
+import { Ticket } from './entities/ticket.entity';
 
 @Injectable()
-export class EntryService {
+export class TicketService {
   constructor(
-    @InjectRepository(Entry)
-    private readonly entryRepository: Repository<Entry>,
+    @InjectRepository(Ticket)
+    private readonly entryRepository: Repository<Ticket>,
     @Inject(forwardRef(() => RaffleService))
     private readonly raffleService: RaffleService
   ) {}
 
   async create(createEntryDto: CreateEntriesDto, userId: string) {
-    const randomNumbers = await Promise.all(
-      Array.from({ length: createEntryDto.quantity }).map(
-        async () => await this.generateRandomNumber(createEntryDto.raffleId)
-      )
+    const { maxTickets, ticketPrice } = await this.raffleService.findOne(
+      createEntryDto.raffleId
+    );
+
+    const randomNumbers = await this.generateRandomNumbers(
+      createEntryDto.quantity,
+      maxTickets
     );
 
     const entries = randomNumbers.map((number) => ({
       raffle: { id: createEntryDto.raffleId },
       user: { id: userId },
+      ticketPrice,
       number
     }));
 
@@ -67,15 +71,21 @@ export class EntryService {
     return this.entryRepository.existsBy({ number });
   }
 
-  async generateRandomNumber(raffleId: string): Promise<number> {
-    const { maxEntries } = await this.raffleService.findOne(raffleId);
+  private async generateRandomNumbers(quantity: number, maxTickets: number) {
+    const numbers = Array.from({ length: quantity });
 
-    const number = Math.floor(Math.random() * maxEntries * 2) + 1;
+    return Promise.all(
+      numbers.map(async () => await this.generateRandomNumber(maxTickets))
+    );
+  }
+
+  private async generateRandomNumber(maxTickets: number): Promise<number> {
+    const number = Math.floor(Math.random() * maxTickets * 2) + 1;
 
     const existsByNumber = await this.existsByNumber(number);
 
     if (existsByNumber) {
-      return await this.generateRandomNumber(raffleId);
+      return await this.generateRandomNumber(maxTickets);
     }
 
     return number;

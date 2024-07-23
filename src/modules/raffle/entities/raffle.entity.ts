@@ -4,12 +4,14 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from 'typeorm';
 import { RaffleStatus } from '../../../common/constants/raffle-status.enum';
 import { User } from '../../user/entities/user.entity';
+import { RaffleImage } from '../../raffle-image/entities/raffle-image.entity';
 
 @Entity({ name: 'raffle' })
 export class Raffle {
@@ -26,16 +28,22 @@ export class Raffle {
   prizeValue: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
-  entryValue: number;
+  ticketPrice: number;
 
   @Column({ type: 'datetime' })
   raffleDate: Date;
 
   @Column()
-  maxEntries: number;
+  maxTickets: number;
 
   @Column({ type: 'enum', enum: RaffleStatus, default: RaffleStatus.PENDING })
   status: RaffleStatus;
+
+  @CreateDateColumn()
+  createdDate: Date;
+
+  @UpdateDateColumn()
+  updatedDate: Date;
 
   @OneToOne(() => User)
   @JoinColumn()
@@ -45,9 +53,6 @@ export class Raffle {
   @JoinColumn()
   createdBy: User;
 
-  @CreateDateColumn()
-  createdDate: Date;
-
-  @UpdateDateColumn()
-  updatedDate: Date;
+  @OneToMany(() => RaffleImage, (raffleImage) => raffleImage.raffle)
+  images: RaffleImage[];
 }
