@@ -28,7 +28,9 @@ export class ProducerService {
         persistent: true
       });
 
-      this.logger.log('Sent To Queue');
+      this.logger.log(
+        ` [${tickets.quantity}] tickets were sent to queue to creation`
+      );
     } catch (error) {
       throw new HttpException(
         'Error adding tickets to queue',

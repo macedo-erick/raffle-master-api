@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateTicketsDto } from './dto/create-tickets.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,8 @@ import { ProducerService } from '../queue/producer/producer.service';
 
 @Injectable()
 export class TicketService {
+  private readonly logger = new Logger(TicketService.name);
+
   constructor(
     private readonly producerService: ProducerService,
     @InjectRepository(Ticket)
@@ -49,6 +51,10 @@ export class TicketService {
     const numbers = await this.ticketRepository
       .save(tickets)
       .then((entries) => entries.map((entry) => entry.number));
+
+    this.logger.log(
+      `[${createTicketsDto.quantity}] tickets were created sucessfully for user [${userId}] in raffle [${createTicketsDto.raffleId}]`
+    );
 
     return { numbers };
   }
