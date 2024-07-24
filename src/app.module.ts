@@ -11,6 +11,7 @@ import jwtConfig from './common/config/jwt.config';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { RaffleImageModule } from './modules/raffle-image/raffle-image.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { QueueModule } from './modules/queue/queue.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { PaymentModule } from './modules/payment/payment.module';
     TicketModule,
     AuthModule,
     RaffleImageModule,
-    PaymentModule
+    PaymentModule,
+    QueueModule
   ],
   controllers: [],
   providers: []

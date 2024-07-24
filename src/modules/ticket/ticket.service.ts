@@ -1,74 +1,88 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { CreateEntriesDto } from './dto/create-entries.dto';
+import { CreateTicketsDto } from './dto/create-tickets.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RaffleService } from '../raffle/raffle.service';
 import { Ticket } from './entities/ticket.entity';
+import { ProducerService } from '../queue/producer/producer.service';
 
 @Injectable()
 export class TicketService {
   constructor(
+    private readonly producerService: ProducerService,
     @InjectRepository(Ticket)
-    private readonly entryRepository: Repository<Ticket>,
+    private readonly ticketRepository: Repository<Ticket>,
     @Inject(forwardRef(() => RaffleService))
     private readonly raffleService: RaffleService
   ) {}
 
-  async create(createEntryDto: CreateEntriesDto, userId: string) {
+  async sendCreateRequestToQueue(
+    createTicketsDto: CreateTicketsDto,
+    userId: string
+  ) {
+    await this.producerService.sendTicketToQueue({
+      ...createTicketsDto,
+      userId
+    });
+
+    return { message: 'Tickets created successfully' };
+  }
+
+  async create(createTicketsDto: CreateTicketsDto, userId: string) {
     const { maxTickets, ticketPrice } = await this.raffleService.findOne(
-      createEntryDto.raffleId
+      createTicketsDto.raffleId
     );
 
     const randomNumbers = await this.generateRandomNumbers(
-      createEntryDto.quantity,
+      createTicketsDto.quantity,
       maxTickets
     );
 
-    const entries = randomNumbers.map((number) => ({
-      raffle: { id: createEntryDto.raffleId },
+    const tickets = randomNumbers.map((number) => ({
+      raffle: { id: createTicketsDto.raffleId },
       user: { id: userId },
       ticketPrice,
       number
     }));
 
-    const numbers = await this.entryRepository
-      .save(entries)
+    const numbers = await this.ticketRepository
+      .save(tickets)
       .then((entries) => entries.map((entry) => entry.number));
 
     return { numbers };
   }
 
   async findAllRafflesByUser(userId: string) {
-    const raffles = await this.entryRepository
-      .createQueryBuilder('entry')
+    const raffles = await this.ticketRepository
+      .createQueryBuilder('ticket')
       .select(['raffle.*'])
-      .where('entry.userId = :userId', { userId })
+      .where('ticket.userId = :userId', { userId })
       .distinct(true)
-      .innerJoin('entry.raffle', 'raffle')
+      .innerJoin('ticket.raffle', 'raffle')
       .getRawMany();
 
     return { raffles, count: raffles.length };
   }
 
-  async findAllEntriesByUserRaffle(userId: string, raffleId: string) {
-    const entries = await this.entryRepository
-      .createQueryBuilder('entry')
-      .select('entry.number')
-      .where('entry.raffleId = :raffleId and entry.userId = :userId', {
+  async findAllTicketsByUserRaffle(userId: string, raffleId: string) {
+    const entries = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .select('ticket.number')
+      .where('ticket.raffleId = :raffleId and ticket.userId = :userId', {
         raffleId,
         userId
       })
-      .orderBy('entry.number', 'ASC')
+      .orderBy('ticket.number', 'ASC')
       .getMany();
 
-    const numbers = entries.map((entry) => entry.number);
+    const numbers = entries.map((ticket) => ticket.number);
 
     return { numbers, count: numbers.length };
   }
 
   existsByNumber(number: number) {
-    return this.entryRepository.existsBy({ number });
+    return this.ticketRepository.existsBy({ number });
   }
 
   private async generateRandomNumbers(quantity: number, maxTickets: number) {
