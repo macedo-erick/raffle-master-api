@@ -1,11 +1,9 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import { Public } from '../../common/decorators/public/public.decorator';
 import { Observable } from 'rxjs';
 import { ChargeResponse, CreateChargeDto } from './dto/charge.dto';
 
 @Controller('payments')
-@Public()
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
