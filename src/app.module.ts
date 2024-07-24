@@ -10,20 +10,24 @@ import { JwtModule } from '@nestjs/jwt';
 import jwtConfig from './common/config/jwt.config';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { RaffleImageModule } from './modules/raffle-image/raffle-image.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [mysqlConfig, jwtConfig] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [mysqlConfig, jwtConfig]
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
-        host: configService.get('mysql.DB_HOST'),
-        port: configService.get('mysql.DB_PORT'),
-        username: configService.get('mysql.DB_USERNAME'),
-        password: configService.get('mysql.DB_PASSWORD'),
-        database: configService.get('mysql.DB_NAME'),
+        host: configService.get('mysql.dbHost'),
+        port: configService.get('mysql.dbPort'),
+        username: configService.get('mysql.dbUsername'),
+        password: configService.get('mysql.dbPassword'),
+        database: configService.get('mysql.dbName'),
         synchronize: true,
         autoLoadEntities: true
       })
@@ -44,7 +48,8 @@ import { RaffleImageModule } from './modules/raffle-image/raffle-image.module';
     EncryptModule,
     TicketModule,
     AuthModule,
-    RaffleImageModule
+    RaffleImageModule,
+    PaymentModule
   ],
   controllers: [],
   providers: []
