@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { CreateTicketsDto } from './dto/create-tickets.dto';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RaffleService } from '../raffle/raffle.service';
 import { Ticket } from './entities/ticket.entity';
@@ -37,20 +37,19 @@ export class TicketService {
     );
 
     const randomNumbers = await this.generateRandomNumbers(
+      createTicketsDto.raffleId,
       createTicketsDto.quantity,
-      maxTickets
+      maxTickets * 2
     );
 
     const tickets = randomNumbers.map((number) => ({
-      raffle: { id: createTicketsDto.raffleId },
+      raffleId: createTicketsDto.raffleId,
       user: { id: userId },
       ticketPrice,
       number
     }));
 
-    const numbers = await this.ticketRepository
-      .save(tickets)
-      .then((entries) => entries.map((entry) => entry.number));
+    const numbers = await this.ticketRepository.insert(tickets);
 
     this.logger.log(
       `[${createTicketsDto.quantity}] tickets were created sucessfully for user [${userId}] in raffle [${createTicketsDto.raffleId}]`
@@ -72,42 +71,53 @@ export class TicketService {
   }
 
   async findAllTicketsByUserRaffle(userId: string, raffleId: string) {
-    const entries = await this.ticketRepository
-      .createQueryBuilder('ticket')
-      .select('ticket.number')
-      .where('ticket.raffleId = :raffleId and ticket.userId = :userId', {
-        raffleId,
-        userId
-      })
-      .orderBy('ticket.number', 'ASC')
-      .getMany();
+    const entries = await this.ticketRepository.find({
+      where: { raffleId, user: { id: userId } },
+      order: { number: 'ASC' }
+    });
 
     const numbers = entries.map((ticket) => ticket.number);
 
     return { numbers, count: numbers.length };
   }
 
-  existsByNumber(number: number) {
-    return this.ticketRepository.existsBy({ number });
+  existsByNumbers(raffleId: string, number: number[]) {
+    return this.ticketRepository.find({
+      where: {
+        number: In(number)
+      }
+    });
   }
 
-  private async generateRandomNumbers(quantity: number, maxTickets: number) {
-    const numbers = Array.from({ length: quantity });
+  private async generateRandomNumbers(
+    raffleId: string,
+    quantity: number,
+    maxTickets: number
+  ) {
+    const numbers = new Set<number>();
 
-    return Promise.all(
-      numbers.map(async () => await this.generateRandomNumber(maxTickets))
-    );
-  }
-
-  private async generateRandomNumber(maxTickets: number): Promise<number> {
-    const number = Math.floor(Math.random() * maxTickets * 2) + 1;
-
-    const existsByNumber = await this.existsByNumber(number);
-
-    if (existsByNumber) {
-      return await this.generateRandomNumber(maxTickets);
+    while (numbers.size < quantity) {
+      const number = Math.floor(Math.random() * maxTickets) + 1;
+      numbers.add(number);
     }
 
-    return number;
+    const existingNumbers = await this.existsByNumbers(raffleId, [...numbers]);
+
+    const uniqueNumbers = [...numbers].filter(
+      (number) => !existingNumbers.some((ticket) => ticket.number === number)
+    );
+
+    const remainingQuantity = quantity - uniqueNumbers.length;
+
+    if (remainingQuantity > 0) {
+      const additionalNumbers = await this.generateRandomNumbers(
+        raffleId,
+        remainingQuantity,
+        maxTickets
+      );
+      uniqueNumbers.push(...additionalNumbers);
+    }
+
+    return uniqueNumbers;
   }
 }

@@ -14,7 +14,7 @@ export class RaffleService {
     @InjectRepository(Raffle)
     private readonly raffleRepository: Repository<Raffle>,
     @Inject(forwardRef(() => TicketService))
-    private readonly TicketService: TicketService
+    private readonly ticketService: TicketService
   ) {}
 
   create(createRaffleDto: CreateRaffleDto) {
@@ -25,45 +25,34 @@ export class RaffleService {
   }
 
   async findAllByStatus(status: RaffleStatus) {
-    const res = await this.raffleRepository.find({
+    return await this.raffleRepository.find({
       where: { status },
       order: { raffleDate: 'ASC' },
-      relations: ['createdBy']
+      relations: ['createdBy'],
+      select: {
+        createdBy: {
+          id: true,
+          firstName: true,
+          lastName: true
+        }
+      }
     });
-
-    return res.map(({ createdBy: { id, firstName, lastName }, ...raffle }) => ({
-      ...raffle,
-      createdBy: { id, firstName, lastName }
-    }));
   }
 
   findOne(id: string) {
-    return this.raffleRepository
-      .createQueryBuilder('raffle')
-      .select([
-        'user.id',
-        'user.firstName',
-        'lastName',
-        'user.email',
-        'user.phone',
-        'raffle.id',
-        'raffle.name',
-        'raffle.description',
-        'raffle.raffleDate',
-        'raffle.maxTickets',
-        'raffle.status',
-        'raffle.winnerId',
-        'raffle.createdDate',
-        'raffle.prizeValue',
-        'raffle.ticketPrice',
-        'image.url',
-        'image.alternateText',
-        'image.createdDate'
-      ])
-      .where('raffle.id = :id', { id })
-      .innerJoin('raffle.createdBy', 'user')
-      .innerJoin('raffle.images', 'image')
-      .getOne();
+    return this.raffleRepository.findOne({
+      where: { id },
+      relations: ['images', 'createdBy'],
+      select: {
+        createdBy: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true
+        }
+      }
+    });
   }
 
   update(id: string, updateRaffleDto: UpdateRaffleDto) {
@@ -75,6 +64,6 @@ export class RaffleService {
   }
 
   findAllByUser(userId: string) {
-    return this.TicketService.findAllRafflesByUser(userId);
+    return this.ticketService.findAllRafflesByUser(userId);
   }
 }
